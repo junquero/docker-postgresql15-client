@@ -1,22 +1,18 @@
-FROM alpine:3.17
+FROM alpine:3.18
 
-RUN apk add --no-cache postgresql-client
+RUN apk add --no-cache postgresql15-client bash
 
 ARG PUID=1000
 ARG PGID=1000
 
-RUN \
-  addgroup -g "${PGID}" postgresql-client && \
-  adduser \
-    -u "${PUID}" \
-    -G postgresql-client \
-    -h /postgresql-client \
-    -D \
-    postgresql-client
+COPY dbinit.sh /psql/dbinit.sh
 
-WORKDIR /postgresql-client
+RUN addgroup -g "${PGID}" psql && \
+    adduser -u "${PUID}" -G psql -h /psql -D psql \
+    && chmod +x /psql/dbinit.sh
 
-USER postgresql-client
+WORKDIR /psql
 
-ENTRYPOINT ["psql"]
+USER psql
 
+ENTRYPOINT ["bash", "-c", "/psql/dbinit.sh"]
